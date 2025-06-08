@@ -20,8 +20,6 @@ jobs:
 
     - name: Inject Gemini API Key
       run: |
-        # Remplace le placeholder dans index.html par le secret
-        # Utilisez des guillemets doubles pour que la substitution de variable ${{ }} fonctionne
         sed -i "s|VOTRE_CLE_API_GEMINI_ICI|${{ secrets.GEMINI_API_KEY }}|g" index.html
 
     - name: Deploy to GitHub Pages
