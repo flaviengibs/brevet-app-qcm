@@ -15,12 +15,16 @@ jobs:
 
     - name: Inject Gemini API Key
       run: |
-        sed -i 's|VOTRE_CLE_API_GEMINI_ICI|${{ secrets.GEMINI_API_KEY }}|g' index.html
+        # Remplace le placeholder dans index.html par le secret
+        # Assurez-vous que le nom du secret est bien GEMINI_API_KEY
+        # La syntaxe '$' avant les guillemets est importante pour la substitution de variables Bash
+        sed -i "s|VOTRE_CLE_API_GEMINI_ICI|${{ secrets.GEMINI_API_KEY }}|g" index.html
       env:
-        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        # L'environnement de l'étape peut accéder aux secrets
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }} # Passez le secret comme variable d'environnement
 
     - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3 
+      uses: peaceiris/actions-gh-pages@v3 # Utilise une action tierce pour déployer
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./
+        github_token: ${{ secrets.GITHUB_TOKEN }} # Token fourni automatiquement par GitHub pour l'authentification
+        publish_dir: ./ # Le dossier à publier (ici, la racine du dépôt)
