@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Révision Brevet - QCM Interactif</title>
+    <!-- Tailwind CSS CDN pour un style moderne et réactif -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Un fond doux */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Alignement en haut pour le scroll */
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 1rem; /* Bords arrondis partout */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 800px;
+            margin-top: 20px;
+        }
+        .option-button {
+            transition: all 0.2s ease-in-out;
+        }
+        .option-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .option-button.correct {
+            background-color: #d1fae5; /* Vert clair pour la bonne réponse */
+            border-color: #34d399;
+        }
+        .option-button.incorrect {
+            background-color: #fee2e2; /* Rouge clair pour la mauvaise réponse */
+            border-color: #ef4444;
+        }
+        .loading-spinner {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid #3b82f6; /* Blue */
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+    </style>
+</head>
+<body class="selection:bg-blue-200">
+    <div class="container">
+        <h1 class="text-4xl font-extrabold text-center text-gray-800 mb-8 tracking-tight">
+            Révision Brevet <span class="text-blue-600">QCM</span>
+        </h1>
+
+        <!-- Sélection des matières -->
+        <div id="subject-selection" class="mb-8 p-6 bg-blue-50 rounded-xl">
+            <h2 class="text-2xl font-semibold text-blue-800 mb-4">Choisissez les matières à réviser :</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                <label class="flex items-center text-lg text-gray-700">
+                    <input type="checkbox" value="Français" checked class="form-checkbox h-5 w-5 text-blue-600 rounded-md">
+                    <span class="ml-2">Français</span>
+                </label>
+                <label class="flex items-center text-lg text-gray-700">
+                    <input type="checkbox" value="Mathématiques" checked class="form-checkbox h-5 w-5 text-blue-600 rounded-md">
+                    <span class="ml-2">Mathématiques</span>
+                </label>
+                <label class="flex items-center text-lg text-gray-700">
+                    <input type="checkbox" value="Histoire" checked class="form-checkbox h-5 w-5 text-blue-600 rounded-md">
+                    <span class="ml-2">Histoire</span>
+                </label>
+                <label class="flex items-center text-lg text-gray-700">
+                    <input type="checkbox" value="Géographie" checked class="form-checkbox h-5 w-5 text-blue-600 rounded-md">
+                    <span class="ml-2">Géographie</span>
+                </label>
+                <label class="flex items-center text-lg text-gray-700">
+                    <input type="checkbox" value="EMC" checked class="form-checkbox h-5 w-5 text-blue-600 rounded-md">
+                    <span class="ml-2">EMC</span>
+                </label>
+                <label class="flex items-center text-lg text-gray-700">
+                    <input type="checkbox" value="Physique-Chimie" checked class="form-checkbox h-5 w-5 text-blue-600 rounded-md">
+                    <span class="ml-2">Physique-Chimie</span>
+                </label>
+                <label class="flex items-center text-lg text-gray-700">
+                    <input type="checkbox" value="SVT" checked class="form-checkbox h-5 w-5 text-blue-600 rounded-md">
+                    <span class="ml-2">SVT</span>
+                </label>
+            </div>
+            <button id="start-quiz-btn" class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105">
+                Commencer le QCM
+            </button>
+        </div>
+
+        <!-- Section du QCM -->
+        <div id="quiz-section" class="hidden">
+            <div class="text-xl font-medium text-gray-600 mb-4">
+                Question <span id="current-question-num">1</span> / <span id="total-questions">10</span>
+                <span class="float-right">Score: <span id="score">0</span></span>
+            </div>
+            <p id="subject-display" class="text-sm text-blue-500 font-semibold mb-3"></p>
+            <div class="bg-gray-50 p-6 rounded-xl border border-gray-200 mb-6">
+                <p id="question-text" class="text-2xl font-bold text-gray-900 mb-4 leading-relaxed"></p>
+                <div id="options-container" class="grid grid-cols-1 gap-4">
+                    <!-- Les options de réponse seront insérées ici par JS -->
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-between gap-4">
+                <button id="next-button" class="w-full sm:w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105">
+                    Question suivante
+                </button>
+                <button id="restart-button" class="w-full sm:w-1/2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105">
+                    Recommencer
+                </button>
+            </div>
+
+            <button id="generate-questions-btn" class="mt-6 w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105">
+                Générer plus de questions (IA)
+            </button>
+        </div>
+
+        <!-- Section des résultats -->
+        <div id="results-section" class="hidden text-center p-8 bg-blue-50 rounded-xl">
+            <h2 class="text-3xl font-extrabold text-blue-800 mb-4">QCM Terminé !</h2>
+            <p class="text-2xl text-gray-700 mb-6">Votre score final : <span id="final-score" class="font-bold text-blue-600"></span> / <span id="max-score" class="font-bold text-blue-600"></span></p>
+            <button id="review-button" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 mr-4">
+                Revoir les questions
+            </button>
+            <button id="new-quiz-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105">
+                Nouveau QCM
+            </button>
+        </div>
+
+        <!-- Modale de révision -->
+        <div id="review-modal" class="modal hidden">
+            <div class="modal-content w-11/12 max-h-[90vh] overflow-y-auto max-w-2xl text-left">
+                <h3 class="text-2xl font-bold mb-4 text-blue-800">Revoir vos réponses</h3>
+                <div id="review-content">
+                    <!-- Les questions et réponses seront insérées ici -->
+                </div>
+                <button id="close-review-modal" class="mt-6 bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105">
+                    Fermer
+                </button>
+            </div>
+        </div>
+
+        <!-- Modale de chargement -->
+        <div id="loading-modal" class="modal hidden">
+            <div class="modal-content flex flex-col items-center">
+                <div class="loading-spinner mb-4"></div>
+                <p class="text-gray-700 text-lg font-semibold">Génération de questions par l'IA...</p>
+            </div>
+        </div>
+
+        <!-- Modale de message (pour les erreurs ou informations) -->
+        <div id="message-modal" class="modal hidden">
+            <div class="modal-content">
+                <p id="message-text" class="text-lg font-semibold text-gray-800 mb-6"></p>
+                <button id="close-message-modal" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all duration-300">
+                    OK
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Données du QCM (questions initiales)
+        let allQuizQuestions = [
+            // Français
+            {
+                question: "Dans quelle phrase le mot 'que' est-il un pronom relatif ?",
+                options: [
+                    "Que manges-tu ?",
+                    "Il faut que tu viennes.",
+                    "L'oiseau que j'ai vu s'est envolé.",
+                    "Elle ne sait que faire."
+                ],
+                answer: 2, // Index 2 correspond à "L'oiseau que j'ai vu s'est envolé."
+                subject: "Français"
+            },
+            {
+                question: "Quel est le temps du verbe 'lire' dans la phrase : 'Nous lisions un livre passionnant.' ?",
+                options: [
+                    "Présent de l'indicatif",
+                    "Imparfait de l'indicatif",
+                    "Passé composé",
+                    "Futur simple"
+                ],
+                answer: 1, // Index 1 correspond à "Imparfait de l'indicatif"
+                subject: "Français"
+            },
+            {
+                question: "Quelle figure de style est utilisée dans l'expression 'Cette obscure clarté qui tombe des étoiles' (Corneille) ?",
+                options: [
+                    "Une métaphore",
+                    "Une comparaison",
+                    "Un oxymore",
+                    "Une allitération"
+                ],
+                answer: 2, // Index 2 correspond à "Un oxymore"
+                subject: "Français"
+            },
+            {
+                question: "Quelle est la nature du mot souligné dans 'Il est *très* grand' ?",
+                options: [
+                    "Un adjectif",
+                    "Un nom",
+                    "Un adverbe",
+                    "Un pronom"
+                ],
+                answer: 2,
+                subject: "Français"
+            },
+
+            // Mathématiques
+            {
+                question: "Quelle est la solution de l'équation $3x - 7 = 5$ ?",
+                options: [
+                    "$x = 2$",
+                    "$x = 3$",
+                    "$x = 4$",
+                    "$x = 6$"
+                ],
+                answer: 2, // Index 2 correspond à "$x = 4$" (3*4 - 7 = 12 - 7 = 5)
+                subject: "Mathématiques"
+            },
+            {
+                question: "Quel est le résultat de $2^3 + 5 \\times 2$ ?",
+                options: [
+                    "16",
+                    "18",
+                    "13",
+                    "26"
+                ],
+                answer: 1, // $2^3 = 8$, $5 \times 2 = 10$, $8 + 10 = 18$
+                subject: "Mathématiques"
+            },
+            {
+                question: "Si un article coûte 80€ et bénéficie d'une réduction de 20%, quel est son nouveau prix ?",
+                options: [
+                    "60€",
+                    "64€",
+                    "70€",
+                    "72€"
+                ],
+                answer: 1, // 80 * 0.80 = 64
+                subject: "Mathématiques"
+            },
+            {
+                question: "Le triangle ABC est rectangle en A. Si AB = 3 cm et AC = 4 cm, quelle est la longueur de l'hypoténuse BC ?",
+                options: [
+                    "5 cm",
+                    "6 cm",
+                    "7 cm",
+                    "8 cm"
+                ],
+                answer: 0, // D'après le théorème de Pythagore : 3^2 + 4^2 = 9 + 16 = 25, donc BC = sqrt(25) = 5
+                subject: "Mathématiques"
+            },
+
+            // Histoire
+            {
+                question: "Quel événement a marqué le début de la Première Guerre Mondiale ?",
+                options: [
+                    "L'assassinat de Jean Jaurès",
+                    "L'attentat de Sarajevo",
+                    "La mobilisation générale en France",
+                    "La bataille de la Marne"
+                ],
+                answer: 1, // Index 1 correspond à "L'attentat de Sarajevo" (assassinat de l'Archiduc François-Ferdinand en 1914)
+                subject: "Histoire"
+            },
+            {
+                question: "Qui était le chef de la France Libre pendant la Seconde Guerre Mondiale ?",
+                options: [
+                    "Philippe Pétain",
+                    "Pierre Laval",
+                    "Charles de Gaulle",
+                    "Georges Clemenceau"
+                ],
+                answer: 2, // Index 2 correspond à "Charles de Gaulle"
+                subject: "Histoire"
+            },
+            {
+                question: "En quelle année la Révolution Française a-t-elle commencé ?",
+                options: [
+                    "1776",
+                    "1789",
+                    "1815",
+                    "1830"
+                ],
+                answer: 1,
+                subject: "Histoire"
+            },
+            {
+                question: "Quel traité a mis fin à la Première Guerre Mondiale en 1919 ?",
+                options: [
+                    "Le traité de Berlin",
+                    "Le traité de Versailles",
+                    "Le traité de Trianon",
+                    "Le traité de Brest-Litovsk"
+                ],
+                answer: 1,
+                subject: "Histoire"
+            },
+
+            // Géographie
+            {
+                question: "Quelle est la capitale du Canada ?",
+                options: [
+                    "Toronto",
+                    "Montréal",
+                    "Vancouver",
+                    "Ottawa"
+                ],
+                answer: 3, // Index 3 correspond à "Ottawa"
+                subject: "Géographie"
+            },
+            {
+                question: "Quel est le plus long fleuve du monde ?",
+                options: [
+                    "L'Amazone",
+                    "Le Nil",
+                    "Le Yangtsé",
+                    "Le Mississippi"
+                ],
+                answer: 0, // L'Amazone est généralement considéré comme le plus long en débit, et désormais en longueur. Le Nil est parfois cité, mais les recherches récentes donnent l'Amazone.
+                subject: "Géographie"
+            },
+            {
+                question: "Quelle est la chaîne de montagnes qui sépare la France et l'Espagne ?",
+                options: [
+                    "Les Alpes",
+                    "Les Pyrénées",
+                    "Le Massif Central",
+                    "Les Vosges"
+                ],
+                answer: 1,
+                subject: "Géographie"
+            },
+            {
+                question: "Quel est le type de climat dominant dans le nord de l'Europe ?",
+                options: [
+                    "Méditerranéen",
+                    "Océanique",
+                    "Continental",
+                    "Polaire"
+                ],
+                answer: 1,
+                subject: "Géographie"
+            },
+
+            // EMC (Éducation Morale et Civique)
+            {
+                question: "Quel est le principe de laïcité en France ?",
+                options: [
+                    "L'interdiction de toute religion",
+                    "La reconnaissance d'une religion d'État",
+                    "La neutralité de l'État vis-à-vis des religions",
+                    "L'obligation de croire en Dieu"
+                ],
+                answer: 2, // Index 2 correspond à "La neutralité de l'État vis-à-vis des religions"
+                subject: "EMC"
+            },
+            {
+                question: "Quel est l'âge légal pour voter en France ?",
+                options: [
+                    "16 ans",
+                    "17 ans",
+                    "18 ans",
+                    "21 ans"
+                ],
+                answer: 2,
+                subject: "EMC"
+            },
+            {
+                question: "Quelle est la devise de la République française ?",
+                options: [
+                    "Liberté, Égalité, Fraternité",
+                    "Travail, Famille, Patrie",
+                    "Honneur et Patrie",
+                    "Unité, Indivisibilité, Fraternité"
+                ],
+                answer: 0,
+                subject: "EMC"
+            },
+            {
+                question: "Quel est le rôle du médiateur dans une situation de conflit ?",
+                options: [
+                    "Juger qui a raison et qui a tort",
+                    "Imposer une solution aux parties",
+                    "Aider les parties à trouver une solution mutuellement acceptable",
+                    "Prendre parti pour l'une des parties"
+                ],
+                answer: 2,
+                subject: "EMC"
+            },
+
+            // Physique-Chimie
+            {
+                question: "Quelle est l'unité de mesure de l'intensité du courant électrique ?",
+                options: [
+                    "Le Volt",
+                    "L'Ohm",
+                    "L'Ampère",
+                    "Le Watt"
+                ],
+                answer: 2, // Index 2 correspond à "L'Ampère"
+                subject: "Physique-Chimie"
+            },
+            {
+                question: "Quelle est la formule chimique de l'eau ?",
+                options: [
+                    "CO2",
+                    "O2",
+                    "H2O",
+                    "NaCl"
+                ],
+                answer: 2,
+                subject: "Physique-Chimie"
+            },
+            {
+                question: "Quel instrument mesure la tension électrique ?",
+                options: [
+                    "L'ampèremètre",
+                    "Le voltmètre",
+                    "L'ohmmètre",
+                    "Le wattmètre"
+                ],
+                answer: 1,
+                subject: "Physique-Chimie"
+            },
+            {
+                question: "Quel est le pH d'une solution neutre ?",
+                options: [
+                    "0",
+                    "7",
+                    "14",
+                    "Entre 0 et 7"
+                ],
+                answer: 1,
+                subject: "Physique-Chimie"
+            },
+
+            // SVT (Sciences de la Vie et de la Terre)
+            {
+                question: "Quel organe est responsable de la respiration chez l'homme ?",
+                options: [
+                    "Le cœur",
+                    "Le foie",
+                    "Les poumons",
+                    "Les reins"
+                ],
+                answer: 2, // Index 2 correspond à "Les poumons"
+                subject: "SVT"
+            },
+            {
+                question: "Quel est le rôle principal de la chlorophylle chez les plantes ?",
+                options: [
+                    "Absorber l'eau",
+                    "Réaliser la photosynthèse",
+                    "Fixer l'azote",
+                    "Protéger la plante des maladies"
+                ],
+                answer: 1,
+                subject: "SVT"
+            },
+            {
+                question: "Quel est l'ordre correct des couches de la Terre, de l'extérieur vers l'intérieur ?",
+                options: [
+                    "Manteau, croûte, noyau",
+                    "Croûte, noyau, manteau",
+                    "Croûte, manteau, noyau",
+                    "Noyau, manteau, croûte"
+                ],
+                answer: 2,
+                subject: "SVT"
+            },
+            {
+                question: "Quel est le nom de l'unité de base de l'hérédité ?",
+                options: [
+                    "La cellule",
+                    "Le chromosome",
+                    "Le gène",
+                    "La protéine"
+                ],
+                answer: 2,
+                subject: "SVT"
+            }
+        ];
+
+        let availableQuizQuestions = []; // Questions filtrées par matière
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let userAnswers = []; // Pour stocker les réponses de l'utilisateur pour la révision
+
+        // Éléments du DOM
+        const subjectSelectionDiv = document.getElementById('subject-selection');
+        const startQuizBtn = document.getElementById('start-quiz-btn');
+        const quizSection = document.getElementById('quiz-section');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const nextButton = document.getElementById('next-button');
+        const restartButton = document.getElementById('restart-button');
+        const currentQuestionNumSpan = document.getElementById('current-question-num');
+        const totalQuestionsSpan = document.getElementById('total-questions');
+        const scoreSpan = document.getElementById('score');
+        const subjectDisplay = document.getElementById('subject-display');
+        const resultsSection = document.getElementById('results-section');
+        const finalScoreSpan = document.getElementById('final-score');
+        const maxScoreSpan = document.getElementById('max-score');
+        const newQuizButton = document.getElementById('new-quiz-button');
+        const reviewButton = document.getElementById('review-button');
+        const reviewModal = document.getElementById('review-modal');
+        const reviewContent = document.getElementById('review-content');
+        const closeReviewModalBtn = document.getElementById('close-review-modal');
+        const generateQuestionsBtn = document.getElementById('generate-questions-btn');
+        const loadingModal = document.getElementById('loading-modal');
+        const messageModal = document.getElementById('message-modal');
+        const messageText = document.getElementById('message-text');
+        const closeMessageModalBtn = document.getElementById('close-message-modal');
+
+
+        // Fonction pour afficher un message modal
+        function showMessage(message) {
+            messageText.innerHTML = message;
+            messageModal.classList.remove('hidden');
+        }
+
+        // Fonction pour cacher le message modal
+        function hideMessage() {
+            messageModal.classList.add('hidden');
+        }
+
+        // Fermer le message modal
+        closeMessageModalBtn.addEventListener('click', hideMessage);
+
+        // Mélanger un tableau (Algorithme de Fisher-Yates)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Démarrer le QCM
+        startQuizBtn.addEventListener('click', () => {
+            const selectedSubjects = Array.from(document.querySelectorAll('#subject-selection input[type="checkbox"]:checked'))
+                                       .map(checkbox => checkbox.value);
+
+            if (selectedSubjects.length === 0) {
+                showMessage("Veuillez sélectionner au moins une matière pour commencer le QCM.");
+                return;
+            }
+
+            // Filtrer les questions en fonction des matières sélectionnées
+            availableQuizQuestions = allQuizQuestions.filter(q => selectedSubjects.includes(q.subject));
+
+            if (availableQuizQuestions.length === 0) {
+                 showMessage("Aucune question disponible pour les matières sélectionnées. Essayez de générer plus de questions.");
+                 return;
+            }
+
+            shuffleArray(availableQuizQuestions); // Mélanger les questions disponibles
+            currentQuestionIndex = 0;
+            score = 0;
+            userAnswers = []; // Réinitialiser les réponses de l'utilisateur
+            scoreSpan.textContent = score;
+            totalQuestionsSpan.textContent = availableQuizQuestions.length;
+
+            subjectSelectionDiv.classList.add('hidden');
+            resultsSection.classList.add('hidden');
+            quizSection.classList.remove('hidden');
+            loadQuestion();
+        });
+
+        // Charger une question
+        function loadQuestion() {
+            resetOptionsState();
+            nextButton.disabled = true; // Désactiver le bouton "Suivant" tant qu'aucune réponse n'est sélectionnée
+            nextButton.classList.add('opacity-50', 'cursor-not-allowed');
+
+            if (currentQuestionIndex < availableQuizQuestions.length) {
+                const question = availableQuizQuestions[currentQuestionIndex];
+                questionText.innerHTML = question.question; // Utiliser innerHTML pour interpréter LaTeX
+                subjectDisplay.textContent = `Matière : ${question.subject}`;
+                optionsContainer.innerHTML = ''; // Nettoyer les options précédentes
+                currentQuestionNumSpan.textContent = currentQuestionIndex + 1;
+
+                question.options.forEach((option, index) => {
+                    const button = document.createElement('button');
+                    button.innerHTML = option; // Utiliser innerHTML pour interpréter LaTeX
+                    button.classList.add('option-button', 'w-full', 'p-4', 'text-left', 'text-lg', 'bg-white', 'border-2', 'border-gray-200', 'rounded-lg', 'hover:bg-blue-50', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500', 'focus:ring-opacity-50');
+                    button.addEventListener('click', () => selectOption(index, button));
+                    optionsContainer.appendChild(button);
+                });
+            } else {
+                showResults();
+            }
+        }
+
+        // Réinitialiser l'état des options
+        function resetOptionsState() {
+            Array.from(optionsContainer.children).forEach(button => {
+                button.classList.remove('correct', 'incorrect');
+                button.disabled = false;
+            });
+        }
+
+        // Sélectionner une option
+        function selectOption(selectedIndex, selectedButton) {
+            const question = availableQuizQuestions[currentQuestionIndex];
+            const isCorrect = (selectedIndex === question.answer);
+
+            // Désactiver toutes les options après une sélection
+            Array.from(optionsContainer.children).forEach(button => {
+                button.disabled = true;
+                // Afficher la bonne réponse en vert, même si l'utilisateur a choisi la mauvaise
+                if (Array.from(optionsContainer.children).indexOf(button) === question.answer) {
+                    button.classList.add('correct', 'border-green-500');
+                } else if (button === selectedButton && !isCorrect) {
+                    button.classList.add('incorrect', 'border-red-500');
+                }
+            });
+
+            if (isCorrect) {
+                score++;
+                scoreSpan.textContent = score;
+            }
+
+            // Enregistrer la réponse de l'utilisateur pour la révision
+            userAnswers.push({
+                question: question.question,
+                options: question.options,
+                correctAnswerIndex: question.answer,
+                userAnswerIndex: selectedIndex,
+                isCorrect: isCorrect
+            });
+
+            // Activer le bouton "Suivant"
+            nextButton.disabled = false;
+            nextButton.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+
+        // Passer à la question suivante
+        nextButton.addEventListener('click', () => {
+            currentQuestionIndex++;
+            loadQuestion();
+        });
+
+        // Afficher les résultats finaux
+        function showResults() {
+            quizSection.classList.add('hidden');
+            resultsSection.classList.remove('hidden');
+            finalScoreSpan.textContent = score;
+            maxScoreSpan.textContent = availableQuizQuestions.length;
+        }
+
+        // Recommencer le QCM depuis le début
+        restartButton.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            score = 0;
+            userAnswers = [];
+            scoreSpan.textContent = score;
+            shuffleArray(availableQuizQuestions); // Re-mélanger pour un nouveau QCM
+            loadQuestion();
+        });
+
+        // Nouveau QCM (retour à la sélection des matières)
+        newQuizButton.addEventListener('click', () => {
+            resultsSection.classList.add('hidden');
+            subjectSelectionDiv.classList.remove('hidden');
+        });
+
+        // Afficher la modale de révision
+        reviewButton.addEventListener('click', () => {
+            reviewContent.innerHTML = ''; // Nettoyer le contenu précédent
+            userAnswers.forEach((qa, index) => {
+                const qDiv = document.createElement('div');
+                qDiv.classList.add('mb-6', 'p-4', 'rounded-lg', qa.isCorrect ? 'bg-green-50' : 'bg-red-50', 'border', qa.isCorrect ? 'border-green-200' : 'border-red-200');
+                qDiv.innerHTML = `
+                    <p class="font-semibold text-lg mb-2 text-gray-800">Question ${index + 1}: ${qa.question}</p>
+                    <ul class="list-disc ml-5 text-gray-700">
+                        ${qa.options.map((option, optIndex) => `
+                            <li class="${optIndex === qa.correctAnswerIndex ? 'font-bold text-green-700' : ''} ${optIndex === qa.userAnswerIndex && !qa.isCorrect ? 'line-through text-red-700' : ''}">
+                                ${option}
+                                ${optIndex === qa.correctAnswerIndex ? ' (Bonne réponse)' : ''}
+                                ${optIndex === qa.userAnswerIndex && !qa.isCorrect ? ' (Votre réponse)' : ''}
+                            </li>
+                        `).join('')}
+                    </ul>
+                    <p class="mt-2 text-sm ${qa.isCorrect ? 'text-green-600' : 'text-red-600'} font-medium">
+                        ${qa.isCorrect ? 'Correct !' : 'Incorrect.'}
+                    </p>
+                `;
+                reviewContent.appendChild(qDiv);
+            });
+            reviewModal.classList.remove('hidden');
+        });
+
+        // Fermer la modale de révision
+        closeReviewModalBtn.addEventListener('click', () => {
+            reviewModal.classList.add('hidden');
+        });
+
+        // --- Intégration de l'IA pour générer plus de questions ---
+        generateQuestionsBtn.addEventListener('click', async () => {
+            const selectedSubjects = Array.from(document.querySelectorAll('#subject-selection input[type="checkbox"]:checked'))
+                                       .map(checkbox => checkbox.value);
+
+            if (selectedSubjects.length === 0) {
+                showMessage("Sélectionnez les matières pour lesquelles générer des questions.");
+                return;
+            }
+
+            loadingModal.classList.remove('hidden');
+            const subjectForPrompt = selectedSubjects.join(', ');
+            const prompt = `Génère 5 questions à choix multiples pour le niveau Brevet dans les matières suivantes : ${subjectForPrompt}. Pour chaque question, fournis 4 options de réponse et l'index (commençant à 0) de la bonne réponse, ainsi que la matière de la question.`;
+
+            // Schéma JSON attendu pour la réponse de l'IA
+            const responseSchema = {
+                type: "ARRAY",
+                items: {
+                    type: "OBJECT",
+                    properties: {
+                        question: { "type": "STRING" },
+                        options: {
+                            type: "ARRAY",
+                            items: { "type": "STRING" }
+                        },
+                        answer: { "type": "NUMBER" },
+                        subject: { "type": "STRING" }
+                    },
+                    required: ["question", "options", "answer", "subject"]
+                }
+            };
+
+            try {
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                const payload = {
+                    contents: chatHistory,
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: responseSchema
+                    }
+                };
+                const apiKey = ""; // Laisser vide, Canvas fournit la clé en runtime
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const json = result.candidates[0].content.parts[0].text;
+                    const parsedJson = JSON.parse(json);
+
+                    // Vérifier si la structure correspond au schéma attendu
+                    if (Array.isArray(parsedJson) && parsedJson.every(item =>
+                        typeof item.question === 'string' &&
+                        Array.isArray(item.options) && item.options.every(opt => typeof opt === 'string') &&
+                        typeof item.answer === 'number' &&
+                        typeof item.subject === 'string'
+                    )) {
+                        allQuizQuestions = allQuizQuestions.concat(parsedJson);
+                        showMessage(`${parsedJson.length} nouvelles questions générées et ajoutées !`);
+                    } else {
+                        throw new Error("Structure de réponse IA inattendue.");
+                    }
+                } else {
+                    throw new Error("Aucune réponse valide de l'IA.");
+                }
+            } catch (error) {
+                console.error("Erreur lors de la génération de questions :", error);
+                showMessage("Désolé, une erreur est survenue lors de la génération de questions. Veuillez réessayer.");
+            } finally {
+                loadingModal.classList.add('hidden');
+            }
+        });
+
+        // Initialisation de MathJax pour les expressions LaTeX
+        // MathJax sera chargé après le rendu initial du DOM
+        const script = document.createElement('script');
+        script.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        script.async = true;
+        document.head.appendChild(script);
+
+        // Une fois MathJax chargé, on peut l'utiliser pour re-rendre les équations.
+        // On utilise un MutationObserver pour détecter les changements de DOM et re-rendre MathJax.
+        const observer = new MutationObserver((mutationsList, observer) => {
+            for(const mutation of mutationsList) {
+                if (mutation.type === 'childList' || mutation.type === 'characterData') {
+                    if (typeof MathJax !== 'undefined') {
+                        MathJax.typesetPromise().then(() => {
+                            // Optionnel : faire quelque chose après le rendu
+                        }).catch((err) => console.log('MathJax typeset failed: ' + err.message));
+                    }
+                }
+            }
+        });
+
+        // Observer les changements dans les conteneurs de questions et d'options
+        observer.observe(questionText, { childList: true, subtree: true, characterData: true });
+        observer.observe(optionsContainer, { childList: true, subtree: true, characterData: true });
+        observer.observe(reviewContent, { childList: true, subtree: true, characterData: true });
+
+
+    </script>
+</body>
+</html>
