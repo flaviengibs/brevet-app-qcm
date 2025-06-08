@@ -1,0 +1,26 @@
+name: Deploy QCM App to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main # Exécuter ce workflow à chaque push sur la branche 'main'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest # Utiliser un runner Ubuntu
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4 # Cloner votre dépôt
+
+    - name: Inject Gemini API Key
+      run: |
+        sed -i 's|VOTRE_CLE_API_GEMINI_ICI|${{ secrets.GEMINI_API_KEY }}|g' index.html
+      env:
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3 
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./
