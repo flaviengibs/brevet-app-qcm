@@ -1,30 +1,15 @@
-name: Deploy QCM App to GitHub Pages
-
-on:
-  push:
-    branches:
-      - main # Exécuter ce workflow à chaque push sur la branche 'main'
-
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest # Utiliser un runner Ubuntu
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4 # Cloner votre dépôt
-
-    - name: Inject Gemini API Key
-      run: |
-        # Remplace le placeholder dans index.html par le secret
-        # Assurez-vous que le nom du secret est bien GEMINI_API_KEY
-        # La syntaxe '$' avant les guillemets est importante pour la substitution de variables Bash
-        sed -i "s|VOTRE_CLE_API_GEMINI_ICI|${{ secrets.GEMINI_API_KEY }}|g" index.html
-      env:
-        # L'environnement de l'étape peut accéder aux secrets
-        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }} # Passez le secret comme variable d'environnement
-
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3 # Utilise une action tierce pour déployer
+Run peaceiris/actions-gh-pages@v3
+[INFO] Usage https://github.com/peaceiris/actions-gh-pages#readme
+Dump inputs
+Setup auth token
+Prepare publishing assets
+Setup Git config
+Create a commit
+Push the commit or tag
+  /usr/bin/git push origin gh-pages
+  remote: Permission to flaviengibs/brevet-app-qcm.git denied to github-actions[bot].
+  fatal: unable to access 'https://github.com/flaviengibs/brevet-app-qcm.git/': The requested URL returned error: 403
+  Error: Action failed with "The process '/usr/bin/git' failed with exit code 128"
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }} # Token fourni automatiquement par GitHub pour l'authentification
         publish_dir: ./ # Le dossier à publier (ici, la racine du dépôt)
